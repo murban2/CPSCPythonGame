@@ -1,6 +1,6 @@
 import sys
 import pygame
-from pygame import key
+from pygame import key, Surface
 from pygame.sprite import Sprite, Group, spritecollideany
 import random
 import settings
@@ -21,10 +21,11 @@ class Viewport:
 
     def update(self, sprite):
         self.left = sprite.world_rect.left - 520
-        if self.left + 520 > settings.WORLD_WIDTH:
-            self.left -= settings.WORLD_WIDTH
-        if self.left + 520  < settings.WORLD_WIDTH / 2:
+
+        if self.left  < 0:
             self.left += settings.WORLD_WIDTH
+        if self.left > settings.WORLD_WIDTH:
+            self.left -= settings.WORLD_WIDTH
 
 
     def compute_rect(self, group, dx = 0):
@@ -35,6 +36,8 @@ class Viewport:
     def draw_group(self, group, surface):
         self.compute_rect(group)
         group.draw(surface)
+
+
         self.compute_rect(group, settings.WORLD_WIDTH)
         group.draw(surface)
 
@@ -44,60 +47,34 @@ class KnightEnemy(Sprite):
     def __init__(self, x, y, screen, *groups):
         super().__init__(*groups)
         self.flip = True
-        self.image = pygame.image.load("assets/enemies/knight_animate/WALK.png")
+        self.image = pygame.image.load("assets/enemies/knight_animate/knight_walk_frame1.png")
         self.rect = self.image.get_rect()
-
 
         self.cropped = None
         self.world_rect = self.image.get_rect().move(x, y)
         self.world_inset_rect = None
-        self.update_inset()
 
-
-
-        self.cropped = pygame.Surface((self.world_rect.x, self.world_rect.y))
-        self.cropped.blit(self.image, (0, 0), (33, 20, 27, 45))
-        self.image = self.cropped
-        screen.blit(self.image, (self.world_rect.x, self.world_rect.y))
 
 
 
     def draw(self, screen):
-
-        self.cropped = pygame.Surface((27, 45))
-        self.cropped.blit(self.image, (0, 0), (33, 20, 27, 45))
-
-        self.image = self.cropped
-        self.image = pygame.transform.flip(self.cropped, True, False)
         self.image.set_colorkey((0, 0, 0))
-
+        self.image.fill((255, 0, 0))
         screen.blit(self.image, (self.world_rect.x, self.world_rect.y))
-
-
-
 
 
     def update(self, player):
         if player.world_rect.x < self.world_rect.x:
             self.world_rect.move_ip(-settings.ENEMY_SPEED, 0)
-        else:
+        elif player.world_rect.centerx > self.world_rect.centerx:
             self.world_rect.move_ip(settings.ENEMY_SPEED, 0)
         wrap_world_rect(self.world_rect)
-
-
-
-
-
-    def update_inset(self):
-        self.world_inset_rect = self.world_rect.inflate(-20, -20)
 
 
 
 class Player(Sprite):
     def __init__(self, viewport, screen, *groups):
         super().__init__(*groups)
-
-
         self.current_animation = 0
         self.idle_sprite = [pygame.image.load("assets/player/individualsprites/01_demon_idle/demon_idle_1.png"),
                             pygame.image.load("assets/player/individualsprites/01_demon_idle/demon_idle_2.png"),
@@ -137,16 +114,12 @@ class Player(Sprite):
                              pygame.image.load("assets/player/individualsprites/03_demon_cleave/demon_cleave_15.png")]
         self.flip = True
         self.current_frame = 0
-        self.image = self.idle_sprite[self.current_frame]
-
-
+        self.image = self.idle_sprite[self.current_frame].convert_alpha()
 
         self.rect = self.image.get_rect()
-
-
         self.world_rect = self.image.get_rect().move(600, 500)
         self.world_inset_rect = None
-        self.update_inset()
+
         self.viewport = viewport
 
         self.cropped = pygame.Surface((100, 110))
@@ -154,11 +127,11 @@ class Player(Sprite):
         screen.blit(self.cropped, (self.world_rect.x, self.world_rect.y))
 
         self.image = self.cropped
-        self.image.set_colorkey((0, 0, 0))
+        self.update_inset()
 
 
     def update_inset(self):
-        self.world_inset_rect = self.world_rect.inflate(-20, -20)
+        self.world_inset_rect = self.world_rect.inflate(-100, -110)
 
 
     def update(self, keys):
@@ -172,16 +145,25 @@ class Player(Sprite):
         if keys[pygame.K_SPACE]:
             self.current_animation = 2
 
+
         wrap_world_rect(self.world_rect)
-        self.update_inset()
+
+
+        self.rect.x = self.world_rect.x - self.viewport.left
+        self.rect.y = self.world_rect.y
+
+
+
 
     def move_left(self):
         self.world_rect.left -= settings.MOVE_SPEED
+        self.update_inset()
         self.flip = False
 
 
     def move_right(self):
         self.world_rect.right += settings.MOVE_SPEED
+        self.update_inset()
         self.flip = True
 
 
@@ -199,9 +181,10 @@ class Player(Sprite):
         screen.blit(self.cropped, (self.world_rect.x, self.world_rect.y))
 
         self.image = self.cropped
-        self.image.set_colorkey((0, 0, 0))
 
-        self.rect = self.cropped.get_rect()
+        self.image.fill((255, 0, 0))
+
+
 
 
 
@@ -219,9 +202,10 @@ class Player(Sprite):
         screen.blit(self.cropped, (self.world_rect.x, self.world_rect.y))
 
         self.image = self.cropped
-        self.image.set_colorkey((0, 0, 0))
 
-        self.rect = self.cropped.get_rect()
+        self.image.fill((255, 0, 0))
+
+
 
     def idle_player_animation(self, screen):
         if self.current_frame > 4:
@@ -238,9 +222,10 @@ class Player(Sprite):
         screen.blit(self.cropped, (self.world_rect.x, self.world_rect.y))
 
         self.image = self.cropped
-        self.image.set_colorkey((0, 0, 0))
 
-        self.rect = self.cropped.get_rect()
+        self.image.fill((255, 0, 0))
+
+
 
 
     def get_frame_count(self):
@@ -251,6 +236,8 @@ class Player(Sprite):
             return 5
         if self.current_animation == 2:
             return 4
+
+
 
 class Background(Sprite):
     def __init__(self, *args):
@@ -337,7 +324,7 @@ class Game:
         self.check_collisions()
 
     def check_collision(self, player, enemy):
-        return self.player.world_inset_rect.colliderect(enemy.world_rect)
+        return player.world_inset_rect.colliderect(enemy.world_rect)
 
     def check_collisions(self):
         if self.player.alive() and \
