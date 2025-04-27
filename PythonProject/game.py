@@ -3,8 +3,6 @@ import pygame
 from pygame import key
 from pygame.sprite import Sprite, Group, spritecollideany
 import random
-
-
 import settings
 
 
@@ -14,7 +12,6 @@ def wrap_world_rect(rect):
         rect.left += settings.WORLD_WIDTH
     if rect.left >= settings.WORLD_WIDTH:
         rect.left -= settings.WORLD_WIDTH
-
 
 
 class Viewport:
@@ -62,8 +59,6 @@ class KnightEnemy(Sprite):
         self.cropped.blit(self.image, (0, 0), (33, 20, 27, 45))
         self.image = self.cropped
         screen.blit(self.image, (self.world_rect.x, self.world_rect.y))
-
-
 
 
 
