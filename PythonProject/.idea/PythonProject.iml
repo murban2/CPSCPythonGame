@@ -7,9 +7,6 @@
     <orderEntry type="jdk" jdkName="Python 3.13 virtualenv at C:\Users\MattR\Desktop\Classes\CPSC4970Python\Module1\PythonProject1\.venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
-  <component name="PackageRequirementsSettings">
-    <option name="requirementsPath" value="" />
-  </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="GOOGLE" />
     <option name="myDocStringFormat" value="Google" />
