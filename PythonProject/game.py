@@ -30,7 +30,7 @@ class Viewport:
         for sprite in group:
             self.compute_rect(group)
             group.draw(surface)
-            if not isinstance(sprite, BackgroundLevelOne) and not isinstance(sprite, FrontgroundLevelOne) or not isinstance(sprite, RockLevelOne):
+            if not isinstance(sprite, BackgroundLevelOne) and not isinstance(sprite, FrontgroundLevelOne) or not isinstance(sprite, Rock):
                 sprite.update_inset()
 
 
@@ -136,6 +136,62 @@ class Attack(Sprite):
     def update_inset(self):
         pass
 
+class Bird(Sprite):
+    def __init__(self, x, y, *groups):
+        super().__init__(*groups)
+        self.fly_sprite = [pygame.image.load("assets/creature/bird/bird_1.png"),
+                           pygame.image.load("assets/creature/bird/bird_2.png"),
+                           pygame.image.load("assets/creature/bird/bird_3.png"),
+                           pygame.image.load("assets/creature/bird/bird_4.png"),
+                           pygame.image.load("assets/creature/bird/bird_5.png"),
+                           pygame.image.load("assets/creature/bird/bird_6.png"),
+                           pygame.image.load("assets/creature/bird/bird_7.png"),
+                           pygame.image.load("assets/creature/bird/bird_8.png")]
+
+        self.current_frame = 0
+        self.image = self.fly_sprite[self.current_frame]
+        self.flip = True
+        self.image = pygame.transform.flip(self.image, True, False)
+        self.rect = self.image.get_rect().move(x, y)
+        self.world_rect = self.rect
+
+        self.height_sign = -1
+
+    def update(self):
+        if self.world_rect.x > 2000:
+            self.flip = False
+        elif self.world_rect.x < 200:
+            self.flip = True
+
+        if self.flip:
+            self.world_rect.x += settings.BIRD_HORIZONTAL_SPEED
+            self.world_rect.y += settings.BIRD_VERTICAL_SPEED * self.height_sign
+            self.image = self.fly_sprite[self.current_frame]
+            self.image = pygame.transform.flip(self.image, True, False)
+        else:
+            self.world_rect.x -= settings.BIRD_HORIZONTAL_SPEED
+            self.world_rect.y += settings.BIRD_VERTICAL_SPEED * self.height_sign
+            self.image = self.fly_sprite[self.current_frame]
+
+        if self.world_rect.y < 100:
+            self.height_sign = 1
+        elif self.world_rect.y > 200:
+            self.height_sign = -1
+
+        self.fly_animation()
+
+    def update_inset(self):
+        pass
+
+    def fly_animation(self):
+        if self.current_frame > 6:
+            self.current_frame = 0
+        else:
+            self.current_frame += 1
+
+
+
+
 class Duck(Sprite):
     def __init__(self, x, screen, *groups):
         super().__init__(*groups)
@@ -196,6 +252,7 @@ class Player(Sprite):
     def __init__(self, viewport, height, *groups):
         super().__init__(*groups)
         self.current_animation = 0
+        self.animation_counter = 0
         self.idle_sprite = [pygame.image.load("assets/player/individualsprites/01_demon_idle/demon_idle_1.png"),
                             pygame.image.load("assets/player/individualsprites/01_demon_idle/demon_idle_2.png"),
                             pygame.image.load("assets/player/individualsprites/01_demon_idle/demon_idle_3.png"),
@@ -261,7 +318,7 @@ class Player(Sprite):
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.move_right()
             self.current_animation = 1
-        if keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE] and self.current_frame < 13:
             self.current_animation = 2
         self.update_inset()
 
@@ -366,7 +423,7 @@ class FrontgroundLevelTwo(Sprite):
     def update_inset(self):
         pass
 
-class RockLevelOne(Sprite):
+class Rock(Sprite):
     def __init__(self, *args):
         super().__init__(*args)
         self.image = pygame.image.load('assets/background/level_one/BigRock1.png').convert_alpha()
@@ -374,7 +431,7 @@ class RockLevelOne(Sprite):
 
         self.world_rect = self.image.get_rect().copy()
         self.world_rect.bottom = settings.SCREEN_HEIGHT + 200
-        self.world_rect.x = -280
+        self.world_rect.x = -300
 
     def update_inset(self):
         pass
@@ -406,9 +463,14 @@ class Game:
         self.static_sprites = Group()
         self.static_sprites.add(BackgroundLevelOne())
         self.single_sprites = Group()
-        self.single_sprites.add(RockLevelOne())
+        self.single_sprites.add(Rock())
         self.front_sprites = Group()
         self.front_sprites.add(FrontgroundLevelOne())
+        self.bird_sprites = Group()
+        for i in range(9):
+            self.bird_sprites.add(Bird(random.randint(300, 1900), random.randint(100, 200)))
+
+
         self.viewport.update(self.player_level_one)
 
 
@@ -440,6 +502,9 @@ class Game:
 
         self.duck_group = Group()
 
+        self.single_sprites_two = Group()
+        self.single_sprites_two.add(Rock())
+
         self.chest_group = Group()
         self.chest_group.add(Chest())
 
@@ -453,7 +518,7 @@ class Game:
 
 
         #state references
-        self.level_one = False
+        self.level_one = True
         self.between_levels = False
         self.level_two = False
         self.won_game = False
@@ -583,6 +648,9 @@ class Game:
         for attack in self.attack_group:
             attack.update()
 
+        for bird in self.bird_sprites:
+            bird.update()
+
         self.viewport.update(self.player_level_one)
         self.player_level_one.update_inset()
         self.check_collisions()
@@ -616,6 +684,8 @@ class Game:
         self.viewport.draw_group(self.single_sprites, self.screen)
         self.viewport.draw_group(self.player_one_group, self.screen)
         self.viewport.draw_group(self.enemy_knights_group, self.screen)
+        self.viewport.draw_group(self.bird_sprites, self.screen)
+
         if self.attack_group:
             self.viewport.draw_group(self.attack_group, self.screen)
 
@@ -629,6 +699,7 @@ class Game:
         self.viewport_two.draw_group(self.duck_group, self.screen)
         self.viewport_two.draw_group(self.chest_group, self.screen)
         self.viewport_two.draw_group(self.frontground_two_group, self.screen)
+        self.viewport_two.draw_group(self.single_sprites_two, self.screen)
 
     def check_collision_knight(self, player, enemy):
         return player.world_inset_rect.colliderect(enemy.rect)
