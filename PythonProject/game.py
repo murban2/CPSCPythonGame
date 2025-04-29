@@ -897,11 +897,11 @@ class Game:
                 self.attack_group.add(Attack(self.enemy_knights_group, player, self.viewport))
 
             self.attack += 1
-            player.attack_player_animation(self.screen, self.enemy_knights_group)
+            player.attack_player_animation(self.enemy_knights_group)
         elif animation_num == 1:
-            player.walk_player_animation(self.screen)
+            player.walk_player_animation()
         elif animation_num == 0:
-            player.idle_player_animation(self.screen)
+            player.idle_player_animation()
 
 
 if __name__ == '__main__':
