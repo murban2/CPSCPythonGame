@@ -7,8 +7,11 @@ Characters:
 ============
 
 Demon: This is the player model that the user controls with left right and space.
+
 Knight: Level one enemies that walk toward the player.
+
 Duck: Level two enemies that rain from the sky.
+
 Bird: Level one creatures that fly through the forest but are harmless.
 
 How to Play.
