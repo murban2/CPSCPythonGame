@@ -1,12 +1,15 @@
 import random
 import sys
 import pygame
-from pygame import key, Surface
+from pygame import key
 from pygame.sprite import Sprite, Group, spritecollideany
 import settings
 
 
 class Viewport:
+    """
+    This class is in charge of managing the user screen for level one.
+    """
     def __init__(self):
         self.left = 0
 
@@ -42,11 +45,19 @@ class Viewport:
 
 
 class ViewportTwo:
+    """
+        This class is in charge of managing the user screen for level two.
+    """
     def __init__(self):
         self.left = 0
 
 
     def update(self, sprite):
+        """
+         updates the screen position
+        Args:
+            sprite: the player sprite
+        """
         if sprite.world_rect.left < 515:
             self.left = 0
         if sprite.world_rect.left > 515:
@@ -56,19 +67,27 @@ class ViewportTwo:
 
 
     def compute_rect(self, group, dx = 0):
-
+        """
+        computes screen location of sprites
+        Args:
+            group: sprites to position
+            dx: offset
+        """
         for sprite in group:
             sprite.rect = sprite.world_rect.move(-self.left + dx, 0)
 
     def draw_group(self, group, surface):
-
+        """
+        draw sprites to screen
+        Args:
+            group: sprites to draw
+            surface: surface to draw to
+        """
         for sprite in group:
             self.compute_rect(group)
             group.draw(surface)
             if not isinstance(sprite, BackgroundLevelTwo):
                 sprite.update_inset()
-
-
         for sprite in group:
             if isinstance(sprite, BackgroundLevelTwo) or isinstance(sprite, FrontgroundLevelTwo) :
                 self.compute_rect(group, settings.WORLD_TWO_WIDTH)
@@ -77,6 +96,9 @@ class ViewportTwo:
 
 
 class KnightEnemy(Sprite):
+    """
+    class for KnightEnemy sprite
+    """
     def __init__(self, x, *groups):
         super().__init__(*groups)
 
@@ -101,10 +123,16 @@ class KnightEnemy(Sprite):
         self.world_inset_rect = None
 
     def update_inset(self):
+        """
+        creates hitbox inset for more accurate collisions.
+        """
         self.world_inset_rect = self.world_rect.inflate(-160, -0)
         self.rect = self.world_inset_rect
 
     def update(self):
+        """
+        updates position of knight sprites
+        """
         self.world_rect.x -= settings.KNIGHT_SPEED
         self.update_inset()
 
@@ -112,6 +140,9 @@ class KnightEnemy(Sprite):
 
 
     def animate_walk(self):
+        """
+        updates walking animation for knight sprites
+        """
         self.current_frame += 1
         if self.current_frame >= len(self.walk_sprite):
             self.current_frame = 0
@@ -121,6 +152,9 @@ class KnightEnemy(Sprite):
 
 
 class Attack(Sprite):
+    """
+    hitbox used for user attacks.
+    """
     def __init__(self, enemies, player, viewport, *groups):
         super().__init__(*groups)
         self.enemies = enemies
@@ -137,6 +171,9 @@ class Attack(Sprite):
         self.attack_group.add()
 
     def update(self):
+        """
+        placing the attack hitbox on the correct side of the player
+        """
         if self.player.flip:
             self.world_rect.x = self.player.rect.x + 80
         else:
@@ -145,9 +182,13 @@ class Attack(Sprite):
         self.rect = self.world_rect
 
     def update_inset(self):
+        """
+        required method override. method is unneeded
+        """
         pass
 
 class Bird(Sprite):
+    """class for bird sprites from level one."""
     def __init__(self, x, y, *groups):
         super().__init__(*groups)
         self.fly_sprite = [pygame.image.load("assets/creature/bird/bird_1.png"),
@@ -169,6 +210,9 @@ class Bird(Sprite):
         self.height_sign = -1
 
     def update(self):
+        """
+        updates position of the birds and the image.
+        """
         if self.world_rect.x > 2000:
             self.flip = False
         elif self.world_rect.x < 200:
@@ -195,6 +239,9 @@ class Bird(Sprite):
         pass
 
     def fly_animation(self):
+        """
+        changing frame of animation.
+        """
         if self.current_frame > 6:
             self.current_frame = 0
         else:
@@ -204,6 +251,9 @@ class Bird(Sprite):
 
 
 class Duck(Sprite):
+    """
+    class for the ducks on level two.
+    """
     def __init__(self, x, screen, *groups):
         super().__init__(*groups)
         self.bounce_sprite = [pygame.image.load("assets/enemies/duck/duck_1.png"),
@@ -225,22 +275,32 @@ class Duck(Sprite):
 
 
     def update_inset(self):
+        """
+        inset change for more accurate hitboxes
+        """
         self.world_inset_rect = self.world_rect.inflate(-70, -70)
         self.rect = self.world_inset_rect
 
 
     def update(self):
+        """
+        updates position of the ducks.
+        """
         self.world_rect.y += settings.DUCK_SPEED
         self.image = pygame.transform.rotate(self.bounce_sprite[self.current_frame], -180)
         self.update_inset()
 
     def iterate_animation(self):
+        """iterates through the frames of the animation"""
         self.current_frame += 1
         if self.current_frame >= len(self.bounce_sprite):
             self.current_frame = 0
 
 
 class Chest(Sprite):
+    """
+    class for the chest on level two.
+    """
     def __init__(self, *groups):
         super().__init__(*groups)
 
@@ -252,14 +312,19 @@ class Chest(Sprite):
         self.world_inset_rect = None
 
     def update_inset(self):
+        """inset for more accurate hitboxes"""
         self.world_inset_rect = self.world_rect.inflate(-0, 200)
         self.rect = self.world_inset_rect
 
     def update(self):
+        """required override. calls update inset."""
         self.update_inset()
 
 
 class Player(Sprite):
+    """
+    Manages the player sprite
+    """
     def __init__(self, viewport, height, *groups):
         super().__init__(*groups)
         self.current_animation = 0
@@ -314,12 +379,19 @@ class Player(Sprite):
 
 
     def update_inset(self):
+        """ update inset for more accurate hitbox.
+        """
 
         self.world_inset_rect = self.world_rect.inflate(-240, -150)
         self.rect = self.world_inset_rect
 
 
     def update(self, keys):
+        """
+        update position
+        Args:
+            keys: key pressed by user.
+        """
         self.current_animation = 0
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
@@ -334,17 +406,20 @@ class Player(Sprite):
         self.update_inset()
 
     def move_left(self):
+        """move the player left."""
         self.world_rect.x -= settings.MOVE_SPEED
         if self.world_rect.x < 0:
             self.world_rect.x = 0
         self.flip = False
 
     def move_right(self):
+        """move the player right"""
         self.world_rect.x += settings.MOVE_SPEED
         self.flip = True
 
 
-    def attack_player_animation(self, screen, enemies):
+    def attack_player_animation(self, enemies):
+        """change attack animation frame for player."""
         if self.current_frame > 13:
             self.current_frame = 0
         else:
@@ -360,7 +435,8 @@ class Player(Sprite):
             self.image = pygame.transform.flip(self.image, True, False)
 
 
-    def walk_player_animation(self, screen):
+    def walk_player_animation(self):
+        """change walk animation frame for player."""
         if self.current_frame > 10:
             self.current_frame = 0
         else:
@@ -372,7 +448,8 @@ class Player(Sprite):
 
 
 
-    def idle_player_animation(self, screen):
+    def idle_player_animation(self):
+        """change idle animation frame for player."""
         if self.current_frame > 4:
             self.current_frame = 0
         else:
@@ -383,6 +460,7 @@ class Player(Sprite):
 
 
     def get_frame_count(self):
+        """return frame count based on current animation running."""
 
         if self.current_animation == 0:
             return 10
@@ -392,28 +470,33 @@ class Player(Sprite):
             return 4
 
 class BackgroundLevelOne(Sprite):
-    def __init__(self, *args):
-        super().__init__(*args)
+    """class for the background in level one."""
+    def __init__(self, *group):
+        super().__init__(*group)
         self.image = pygame.image.load('assets/background/level_one/background_main.png').convert()
         self.world_rect = self.image.get_rect().copy()
         self.world_rect.bottom = settings.SCREEN_HEIGHT
 
     def update_inset(self):
+        """required override."""
         pass
 
 class BackgroundLevelTwo(Sprite):
-    def __init__(self, *args):
-        super().__init__(*args)
+    """class for the background in level two."""
+    def __init__(self, *group):
+        super().__init__(*group)
         self.image = pygame.image.load('assets/background/level_two/background_snow.png').convert()
         self.world_rect = self.image.get_rect().copy()
         self.world_rect.bottom = settings.SCREEN_HEIGHT
 
     def update_inset(self):
+        """required override."""
         pass
 
 class FrontgroundLevelOne(Sprite):
-    def __init__(self, *args):
-        super().__init__(*args)
+    """class for the ground in front of the player in level one."""
+    def __init__(self, *group):
+        super().__init__(*group)
         self.image = pygame.image.load('assets/background/level_one/layer1.png').convert()
         self.image.set_colorkey((0,0,0))
 
@@ -421,9 +504,11 @@ class FrontgroundLevelOne(Sprite):
         self.world_rect.bottom = settings.SCREEN_HEIGHT
 
     def update_inset(self):
+        """required override."""
         pass
 
 class FrontgroundLevelTwo(Sprite):
+    """class for the ground in front of the player in level two."""
     def __init__(self, *args):
         super().__init__(*args)
         self.image = pygame.image.load('assets/background/level_two/layer1.png').convert_alpha()
@@ -432,9 +517,11 @@ class FrontgroundLevelTwo(Sprite):
         self.world_rect.bottom = settings.SCREEN_HEIGHT
 
     def update_inset(self):
+        """required override."""
         pass
 
 class Rock(Sprite):
+    """class for the rock at the start of each level."""
     def __init__(self, *args):
         super().__init__(*args)
         self.image = pygame.image.load('assets/background/level_one/BigRock1.png').convert_alpha()
@@ -445,10 +532,12 @@ class Rock(Sprite):
         self.world_rect.x = -300
 
     def update_inset(self):
+        """required override."""
         pass
 
 
 class Game:
+    """class for gameloop and game functionality."""
     def __init__(self):
 
         pygame.font.init()
@@ -456,10 +545,6 @@ class Game:
         self.screen = pygame.display.set_mode((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT))
         pygame.display.set_caption('This is a game.')
         self.viewport = Viewport()
-
-
-        #both level references.
-
 
         #level 1 references
         self.attack = 15
@@ -480,8 +565,6 @@ class Game:
         self.bird_sprites = Group()
         for i in range(9):
             self.bird_sprites.add(Bird(random.randint(300, 1900), random.randint(100, 200)))
-
-
         self.viewport.update(self.player_level_one)
 
 
@@ -536,6 +619,9 @@ class Game:
 
 
     def game_loop(self):
+        """
+        The main loop the game runs on.
+        """
 
         frame_num_one = 0
         frame_num_two = 0
@@ -599,6 +685,11 @@ class Game:
 
 
     def win_screen(self, clock):
+        """
+        The win screen for the end of level 2.
+        Args:
+            clock: the clock object from the game loop.
+        """
         while True:
             self.handle_events()
 
@@ -610,6 +701,7 @@ class Game:
 
 
     def remove_level_one_sprites(self):
+        """removing all level one sprites."""
         for fg in self.front_sprites:
             fg.kill()
         for bg in self.static_sprites:
@@ -623,6 +715,7 @@ class Game:
 
 
     def draw_result(self):
+        """drawing the result from level one (win or loss)."""
         if self.player_one_group:
             pygame.draw.rect(self.screen, (100, 0, 0), self.text_rect)
             pygame.draw.rect(self.screen, (0, 0, 0), self.text_rect, 3)
@@ -639,6 +732,7 @@ class Game:
 
 
     def handle_events(self):
+        """handling quit event"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit(0)
@@ -654,14 +748,13 @@ class Game:
 
 
     def update(self):
+        """updating moving models for level one"""
         self.player_one_group.update(key.get_pressed())
 
         for enemy in self.enemy_knights_group:
             enemy.update()
-
         for attack in self.attack_group:
             attack.update()
-
         for bird in self.bird_sprites:
             bird.update()
 
@@ -674,6 +767,7 @@ class Game:
 
 
     def update_two(self):
+        """updating moving models for level 2"""
         self.player_two_group.update(key.get_pressed())
 
         for duck in self.duck_group:
@@ -693,6 +787,7 @@ class Game:
 
 
     def draw(self):
+        """drawing the sprites for level one"""
         self.screen.fill((0, 0, 0))
         self.viewport.draw_group(self.static_sprites, self.screen)
         self.viewport.draw_group(self.single_sprites, self.screen)
@@ -707,6 +802,7 @@ class Game:
 
 
     def draw_two(self):
+        """drawing the sprites for level 2"""
         self.screen.fill((0,0,0))
         self.viewport_two.draw_group(self.background_two_group, self.screen)
         self.viewport_two.draw_group(self.player_two_group, self.screen)
@@ -716,40 +812,84 @@ class Game:
         self.viewport_two.draw_group(self.single_sprites_two, self.screen)
 
     def check_collision_knight(self, player, enemy):
+        """
+        getting result of player collision with Knight enemy
+        Args:
+            player: the player sprite
+            enemy: the enemy collided with.
+
+        Returns: true or false.
+
+        """
         return player.world_inset_rect.colliderect(enemy.rect)
 
     def check_collision_duck(self, player, duck):
+        """
+        getting result of player collision with duck enemy
+        Args:
+            player: the player sprite
+            duck: the duck collided with.
+
+        Returns: true or false.
+
+        """
         return player.world_inset_rect.colliderect(duck.rect)
 
     def check_collision_attack(self, enemy, attack):
+        """
+        getting result of enemy collision with player attack
+        Args:
+            enemy: the enemy that was struck
+            attack: the attack hitbox
+
+        Returns: true or false
+
+        """
         return enemy.world_inset_rect.colliderect(attack.rect)
 
     def check_collision_chest(self, player, chest):
+        """
+        getting result of player collision with chest.
+        Args:
+            player: the player sprite
+            chest: the chest collided with.
+
+        Returns: true or false
+
+        """
         return player.world_inset_rect.colliderect(chest.rect)
 
     def check_collisions(self):
+        """checking for collisions between sprites."""
         if self.player_level_one.alive() and \
-                (collided_with := spritecollideany(self.player_level_one, self.enemy_knights_group, self.check_collision_knight)) is not None:
+                (spritecollideany(self.player_level_one, self.enemy_knights_group, self.check_collision_knight)) is not None:
             self.player_level_one.kill()
             self.level_one = False
 
         if self.player_level_two.alive() and \
-                (collided_with := spritecollideany(self.player_level_two, self.duck_group, self.check_collision_duck)) is not None:
+                (spritecollideany(self.player_level_two, self.duck_group, self.check_collision_duck)) is not None:
             self.player_level_two.kill()
             self.level_two = False
 
         if self.player_level_two.alive() and \
-                (collided_with := spritecollideany(self.player_level_two, self.chest_group, self.check_collision_chest)) is not None:
+                (spritecollideany(self.player_level_two, self.chest_group, self.check_collision_chest)) is not None:
             self.level_two = False
             self.won_game = True
 
         for enemy in self.enemy_knights_group:
-            if (collided_with := spritecollideany(enemy, self.attack_group, self.check_collision_attack)) is not None:
+            if (spritecollideany(enemy, self.attack_group, self.check_collision_attack)) is not None:
                 enemy.kill()
                 self.amount_of_enemies -= 1
 
 
     def player_one_animation(self, player,animation_num):
+        """
+        changing player animation
+        Args:
+            player: player sprite
+            animation_num: the animation number to perform.
+
+        """
         for attack in self.attack_group:
             attack.kill()
         if animation_num == 2 or self.attack < 15:
