@@ -109,6 +109,17 @@ class KnightEnemy(Sprite):
         self.update_inset()
 
 
+
+
+    def animate_walk(self):
+        self.current_frame += 1
+        if self.current_frame >= len(self.walk_sprite):
+            self.current_frame = 0
+        self.image = self.walk_sprite[self.current_frame].convert_alpha()
+        self.image = pygame.transform.flip(self.image, True, False)
+        self.image = pygame.transform.scale_by(self.image, 2)
+
+
 class Attack(Sprite):
     def __init__(self, enemies, player, viewport, *groups):
         super().__init__(*groups)
@@ -541,6 +552,9 @@ class Game:
 
             if frame_num_one % player_frames == 0:
                 self.player_one_animation(self.player_level_one, animation_num)
+            if frame_num_one % 8 == 0:
+                for enemy in self.enemy_knights_group:
+                    enemy.animate_walk()
             clock.tick(settings.FPS)
 
         self.draw_result()
